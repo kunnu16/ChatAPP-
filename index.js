@@ -17,21 +17,33 @@ io.on("connection", (socket) => {
     socket.broadcast.emit('name', name);
   })
 
+  //   socket.on("chat-message", (msg) => {
+  //     console.log("a new user message", msg);
+  //     // io.emit('new_message', msg);                    // send msg to every client/user including sender
+  //     socket.broadcast.emit('new_message',msg);          //send msg to every client/user excluding sender
+  //   });
+  // });
 
-//   socket.on("chat-message", (msg) => {
-//     console.log("a new user message", msg);
-//     // io.emit('new_message', msg);                    // send msg to every client/user including sender
-//     socket.broadcast.emit('new_message',msg);          //send msg to every client/user excluding sender
-//   });
-// });
+  socket.on("chat-message", (msg) => {
+    console.log("a new user message", msg);
+    socket.broadcast.emit('new_message',{message: msg, name: users[socket.id]});          //send msg to every client/user excluding sender
+  });
 
+  // User is typing event
+  socket.on("startTyping", () => {
+    socket.broadcast.emit("user_typing", users[socket.id]);
+  });
 
-socket.on("chat-message", (msg) => {
-  console.log("a new user message", msg);
-  socket.broadcast.emit('new_message',{message: msg, name: users[socket.id]});          //send msg to every client/user excluding sender
+  // User stopped typing event
+  socket.on("stopTyping", () => {
+    socket.broadcast.emit("user_stopped_typing", users[socket.id]);
+  });
+
+  socket.on('disconnect', () => {
+    socket.broadcast.emit('leave',users[socket.id]);
+    delete users[socket.id];
+  })
 });
-});
-
 
 app.get("/", (req, res) => {
   res.sendFile("/public/index.html");
